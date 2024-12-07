@@ -1,0 +1,131 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "b3f55cee",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "IP Address           Request Count\n",
+      "203.0.113.5          8\n",
+      "198.51.100.23        8\n",
+      "192.168.1.1          7\n",
+      "10.0.0.2             6\n",
+      "192.168.1.100        5\n",
+      "\n",
+      "Most Frequently Accessed Endpoint:\n",
+      "/login (Accessed 13 times)\n",
+      "\n",
+      "Suspicious Activity Detected:\n",
+      "IP Address           Failed Login Attempts\n"
+     ]
+    }
+   ],
+   "source": [
+    "import re\n",
+    "import csv\n",
+    "from collections import defaultdict\n",
+    "\n",
+    "# Function to parse the log file and analyze data\n",
+    "def analyze_log_file(log_file_path, threshold=10):\n",
+    "    # Dictionaries to store counts\n",
+    "    ip_request_counts = defaultdict(int)\n",
+    "    endpoint_access_counts = defaultdict(int)\n",
+    "    failed_login_attempts = defaultdict(int)\n",
+    "\n",
+    "    # Regular expressions for parsing log entries\n",
+    "    log_entry_pattern = re.compile(r'(\\d+\\.\\d+\\.\\d+\\.\\d+) - - \\[.*?\\] \".*? (.*?) HTTP.*?\" (\\d+) .*?')\n",
+    "    failed_login_pattern = re.compile(r'401|Invalid credentials')\n",
+    "\n",
+    "    with open(log_file_path, 'r') as file:\n",
+    "        for line in file:\n",
+    "            match = log_entry_pattern.match(line)\n",
+    "            if match:\n",
+    "                ip, endpoint, status_code = match.groups()\n",
+    "                ip_request_counts[ip] += 1\n",
+    "                endpoint_access_counts[endpoint] += 1\n",
+    "\n",
+    "                if failed_login_pattern.search(line):\n",
+    "                    failed_login_attempts[ip] += 1\n",
+    "\n",
+    "    # Sort results\n",
+    "    sorted_ip_requests = sorted(ip_request_counts.items(), key=lambda x: x[1], reverse=True)\n",
+    "    most_accessed_endpoint = max(endpoint_access_counts.items(), key=lambda x: x[1])\n",
+    "    suspicious_ips = {ip: count for ip, count in failed_login_attempts.items() if count > threshold}\n",
+    "\n",
+    "    # Display results\n",
+    "    print(\"IP Address           Request Count\")\n",
+    "    for ip, count in sorted_ip_requests:\n",
+    "        print(f\"{ip:<20} {count}\")\n",
+    "\n",
+    "    print(\"\\nMost Frequently Accessed Endpoint:\")\n",
+    "    print(f\"{most_accessed_endpoint[0]} (Accessed {most_accessed_endpoint[1]} times)\")\n",
+    "\n",
+    "    print(\"\\nSuspicious Activity Detected:\")\n",
+    "    print(\"IP Address           Failed Login Attempts\")\n",
+    "    for ip, count in suspicious_ips.items():\n",
+    "        print(f\"{ip:<20} {count}\")\n",
+    "\n",
+    "    # Save results to CSV\n",
+    "    with open('log_analysis_results.csv', 'w', newline='') as csv_file:\n",
+    "        writer = csv.writer(csv_file)\n",
+    "        \n",
+    "        # Requests per IP\n",
+    "        writer.writerow([\"Requests per IP\"])\n",
+    "        writer.writerow([\"IP Address\", \"Request Count\"])\n",
+    "        writer.writerows(sorted_ip_requests)\n",
+    "        \n",
+    "        # Most Accessed Endpoint\n",
+    "        writer.writerow([])\n",
+    "        writer.writerow([\"Most Accessed Endpoint\"])\n",
+    "        writer.writerow([\"Endpoint\", \"Access Count\"])\n",
+    "        writer.writerow([most_accessed_endpoint[0], most_accessed_endpoint[1]])\n",
+    "        \n",
+    "        # Suspicious Activity\n",
+    "        writer.writerow([])\n",
+    "        writer.writerow([\"Suspicious Activity\"])\n",
+    "        writer.writerow([\"IP Address\", \"Failed Login Count\"])\n",
+    "        writer.writerows(suspicious_ips.items())\n",
+    "\n",
+    "# File path\n",
+    "log_file_path = \"sample.log\"\n",
+    "\n",
+    "# Run the analysis\n",
+    "analyze_log_file(log_file_path)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "26d8f38f",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.11.3"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
